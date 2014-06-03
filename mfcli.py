@@ -12,7 +12,7 @@ class MediaFireOps:
     def __init__(self, APP_ID, APP_KEY, user, password):
         self.auth_user = MediaFire.MediaFireUser(APP_ID, API_KEY)
         self.auth_user.get_session_token(user, password)
-        
+
     def getFolderContient(self, folder_key=None, contentType="files"):
         self.myFolder = MediaFire.MediaFireFolder(folder_key, self.auth_user)
         return self.myFolder.get_content(content_type=contentType)[contentType]
@@ -23,20 +23,20 @@ class MediaFireOps:
 
     def uploadFolder(self, localFolder, folderKey = None):
         self.myFolder = MediaFire.MediaFireFolder(folderKey, self.auth_user)
-        
+
         if localFolder[-1] == '/':
             localFolderName = localFolder[0:-1]
         else:
             localFolderName = localFolder
         localFolderName = os.path.basename(localFolderName)
-        
+
         newFolderKey = self.myFolder.create(localFolderName, folderKey)[0] #DONE: extract folder name
         for f in os.listdir(localFolder):
             if os.path.isfile(os.path.join(localFolder,f)):
                 self.uploadFile(os.path.join(localFolder,f),newFolderKey)
             elif os.path.isdir(os.path.join(localFolder,f)):
                 self.uploadFolder(os.path.join(localFolder,f),newFolderKey)
-                
+
     def downloadFile(self, file_key, destFolder=None):
         self.mf_file = MediaFire.MediaFireFile(file_key, user=self.auth_user)
         try:
@@ -44,14 +44,14 @@ class MediaFireOps:
         except:
             print 'can not extract direct link for' #add file name
             return
-            
+
         print 'url :', url
         os.system('wget "'+url+'"')
         return
         #ToDo: using wget until fixing builtin downloader
         file_name = url.split('/')[-1]
         u = urllib2.urlopen(url)
-        
+
         if not(destFolder):
             destFolder = ''
         if destFolder and destFolder[-1] != '/':
@@ -78,17 +78,17 @@ class MediaFireOps:
     def getFileInfo(self, fileKey):
         self.mf_file = MediaFire.MediaFireFile(fileKey, user=self.auth_user)
         return self.mf_file.get_info()
-        
+
     def getFolderInfo(self, folderKey):
         self.mf_folder = MediaFire.MediaFireFolder(folderKey, user=self.auth_user)
         return self.mf_folder.get_info
-        
+
     def downloadFolder(self, folderKey=None, destFolder=None):
         #download root files
         for userFile in self.getFolderContient(folderKey):
             self.auth_user.get_session_token(user, password)
             self.downloadFile(userFile['quickkey'])
-                
+
 def optValidator(val1, val2, fatal=None):
     if val1:
         return val1
@@ -102,7 +102,7 @@ def optValidator(val1, val2, fatal=None):
 def ppdic(dic, spaces=1):
     big = max([ len(str(x)) for x in dic])
     for x in dic:
-        print x + ':' + (big-len(x)+spaces)*' '+dic[x]    
+        print x + ':' + (big-len(x)+spaces)*' '+dic[x]
 
 
 parser = OptionParser()
@@ -117,7 +117,7 @@ parser.add_option("-p", "--user-password", dest="password", action="store",
                   help="user password", metavar="p@ssw0rd")
 parser.add_option("-o", "--operation", dest="operation", action="store",
                   help="operation to performe on your folder. Possible operations are: (Move, list)",
-                  metavar="[list, move, copie, download, ...]")                 
+                  metavar="[list, move, copie, download, ...]")
 parser.add_option("-t", "--type", dest="list_type", action="store",
                   help="listing type : files or folders", metavar="[files|folders]")
 parser.add_option("-i", "--identifier", dest="ident", action="store",
@@ -139,7 +139,7 @@ c = ConfigParser.RawConfigParser()
 if options.config:
     cfgFile = options.config
 else:
-    cfgFile = os.path.expanduser("~/.mfcli.conf") 
+    cfgFile = os.path.expanduser("~/.mfcli.conf")
     if not(os.path.exists(cfgFile)):
         cfgFile = None
 if cfgFile:
@@ -152,14 +152,14 @@ if cfgFile:
     except:
         print "[!] can not open config file, ignoring it ..."
 
-    API_KEY = optValidator(options.API_KEY, API_KEY, "Must give a valid mediafire API key")
-    APP_ID = optValidator(options.APP_ID, APP_ID, "Must give a valid mediafire application ID")
-    user = optValidator(options.user, user)
-    if user :
-        msg = "an user name is specified, must give corresponding password"
-    else:
-        msg = None
-    password = optValidator(options.password, password, msg)
+API_KEY = optValidator(options.API_KEY, API_KEY, "Must give a valid mediafire API key")
+APP_ID = optValidator(options.APP_ID, APP_ID, "Must give a valid mediafire application ID")
+user = optValidator(options.user, user)
+if user :
+    msg = "an user name is specified, must give corresponding password"
+else:
+    msg = None
+password = optValidator(options.password, password, msg)
 
 mfOps = MediaFireOps(APP_ID, API_KEY, user, password)
 
@@ -172,7 +172,7 @@ if options.operation == "list":
             print(f['folderkey']+"\t"+str(int(f['file_count'])+int(f['folder_count']))+"\t\t"+f['name'])
     else:
         print '[x] Must specifie files or folders'
-        
+
 elif options.operation == "download" :
     if options.ident :
         if len(options.ident) == 13 : #folder
@@ -193,7 +193,7 @@ elif options.operation == "info" :
         ppdic(mfOps.getFolderInfo(options.ident), 6)
     else:
         ppdic(mfOps.getFileInfo(options.ident), 6)
-    
-    
-    
+
+
+
 
